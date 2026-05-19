@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <title>Defesa do Castelo</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div id="game-root">
+    <div id="hud-top">
+      <div class="hud-item"><span class="hud-icon">🪙</span><span id="hud-coins">100</span></div>
+      <div class="hud-item"><span class="hud-icon">❤️</span><span id="hud-hp">100</span></div>
+      <div class="hud-item"><span class="hud-icon">🌊</span>Onda <span id="hud-wave">0</span> / 10</div>
+      <div class="hud-item" id="hud-state">Preparar Defesas</div>
+    </div>
+
+    <div id="game-area">
+      <canvas id="game-canvas" width="1728" height="1008"></canvas>
+
+      <div id="side-panel">
+        <h2>Construções</h2>
+        <div id="shop-list"></div>
+        <button id="start-wave-btn">▶ Iniciar Onda</button>
+        <button id="new-game-btn">↻ Novo Jogo</button>
+        <div id="info-box"></div>
+      </div>
+    </div>
+
+    <div id="overlay" class="hidden">
+      <div id="overlay-content">
+        <h1 id="overlay-title">Game Over</h1>
+        <p id="overlay-message"></p>
+        <button id="overlay-btn">Jogar de Novo</button>
+      </div>
+    </div>
+
+    <div id="tower-popup" class="hidden">
+      <div class="popup-content"></div>
+    </div>
+  </div>
+
+  <script type="module" src="src/main.js"></script>
+</body>
+</html>
