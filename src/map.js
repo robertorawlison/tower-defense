@@ -1,5 +1,15 @@
 import { CFG } from './config.js';
-import { randomPathBFS } from './pathfinding.js';
+import { generateMaze, solveMazeBFS } from './maze.js';
+import {
+  Q1, Q2, Q3, Q4,
+  quadrantBounds,
+  randomExternalEdgeCell,
+  castleEdgeCellsHardQuadrant,
+  castleEdgeCellsForSide,
+  stitchedSideForPair,
+  pickRandom,
+} from './quadrants.js';
+import { buildSpawnPlan, DIFFICULTY } from './difficulty.js';
 
 export const CELL_TYPES = {
   GRASS: 'grass',
@@ -11,7 +21,9 @@ export const CELL_TYPES = {
 
 const DECOR_KEYS = ['tree_pine', 'tree_oak', 'rock', 'bush', 'stump', 'barrel', 'crate', 'logs', 'fence', 'fire', 'sign', 'banner'];
 
-export function generateMap() {
+const key = (c, r) => `${c},${r}`;
+
+export function generateMap(difficulty = CFG.DIFFICULTY_DEFAULT, rng = Math.random) {
   const cols = CFG.GRID_COLS;
   const rows = CFG.GRID_ROWS;
 
@@ -19,7 +31,7 @@ export function generateMap() {
     Array.from({ length: cols }, () => ({ type: CELL_TYPES.GRASS, decor: null, pathTile: null }))
   );
 
-  const castleStartCol = cols - CFG.CASTLE_COLS - 1;
+  const castleStartCol = Math.floor((cols - CFG.CASTLE_COLS) / 2);
   const castleStartRow = Math.floor((rows - CFG.CASTLE_ROWS) / 2);
   const castleArea = { col: castleStartCol, row: castleStartRow, cols: CFG.CASTLE_COLS, rows: CFG.CASTLE_ROWS };
 
@@ -29,34 +41,26 @@ export function generateMap() {
     }
   }
 
-  const goal = { c: castleStartCol - 1, r: castleStartRow + Math.floor(CFG.CASTLE_ROWS / 2) };
-
-  const spawnRowA = Math.max(1, Math.floor(rows * 0.25));
-  const spawnRowB = Math.min(rows - 2, Math.floor(rows * 0.75));
-  const spawns = [
-    { c: 0, r: spawnRowA },
-    { c: 0, r: spawnRowB },
-  ];
-
   const blocked = new Set();
   for (let r = castleStartRow; r < castleStartRow + CFG.CASTLE_ROWS; r++) {
     for (let c = castleStartCol; c < castleStartCol + CFG.CASTLE_COLS; c++) {
-      blocked.add(`${c},${r}`);
+      blocked.add(key(c, r));
     }
   }
 
+  const plan = buildSpawnPlan(difficulty);
   const paths = [];
-  for (let i = 0; i < spawns.length; i++) {
-    const path = randomPathBFS(cols, rows, spawns[i], goal, blocked, 0.7);
-    if (!path) {
-      return generateMap();
+  const spawns = [];
+  const ends = [];
+
+  for (const item of plan) {
+    const result = buildPathForPlanItem(item, difficulty, castleArea, blocked, rng);
+    if (!result) {
+      return generateMap(difficulty, rng);
     }
-    paths.push(path);
-    for (const cell of path) {
-      if (cell.c !== goal.c || cell.r !== goal.r) {
-        if (i > 0 && Math.random() < 0.3) continue;
-      }
-    }
+    paths.push(result.path);
+    spawns.push(result.spawn);
+    ends.push(result.end);
   }
 
   for (const path of paths) {
@@ -73,7 +77,7 @@ export function generateMap() {
     for (let c = 0; c < cols; c++) {
       if (grid[r][c].type !== CELL_TYPES.GRASS) continue;
       if (isAdjacentToPath(grid, c, r, cols, rows)) {
-        if (Math.random() < CFG.SLOT_DENSITY) {
+        if (rng() < CFG.SLOT_DENSITY) {
           grid[r][c].type = CELL_TYPES.BUILD_SLOT;
         }
       }
@@ -82,15 +86,123 @@ export function generateMap() {
 
   for (let r = 0; r < rows; r++) {
     for (let c = 0; c < cols; c++) {
-      if (grid[r][c].type === CELL_TYPES.GRASS && Math.random() < CFG.DECOR_DENSITY) {
-        grid[r][c].decor = DECOR_KEYS[Math.floor(Math.random() * DECOR_KEYS.length)];
+      if (grid[r][c].type === CELL_TYPES.GRASS && rng() < CFG.DECOR_DENSITY) {
+        grid[r][c].decor = DECOR_KEYS[Math.floor(rng() * DECOR_KEYS.length)];
       }
     }
   }
 
   const waypoints = paths.map((path) => path.map((cell) => cellCenter(cell.c, cell.r)));
 
-  return { grid, cols, rows, paths, waypoints, spawns, goal, castleArea };
+  return {
+    grid, cols, rows,
+    paths, waypoints,
+    spawns, ends,
+    castleArea,
+    difficulty,
+  };
+}
+
+function buildPathForPlanItem(item, difficulty, castleArea, blocked, rng) {
+  if (item.kind === 'single') {
+    const q = item.quadrant;
+    const bounds = quadrantBounds(q);
+    const start = randomExternalEdgeCell(q, rng);
+    const endCandidates = castleEdgeCellsHardQuadrant(q, castleArea)
+      .filter((t) => inBounds(t, bounds) && !blocked.has(key(t.c, t.r)));
+    if (!endCandidates.length) return null;
+    const end = pickRandom(endCandidates, rng);
+    const { connections } = generateMaze(bounds, blocked, rng);
+    const path = solveMazeBFS(connections, start, end);
+    if (!path) return null;
+    return { path, spawn: start, end };
+  }
+
+  const qA = item.quadrantA;
+  const qB = item.quadrantB;
+  const boundsA = quadrantBounds(qA);
+  const boundsB = quadrantBounds(qB);
+  const side = stitchedSideForPair(qA, qB);
+  const endCandidates = castleEdgeCellsForSide(side, castleArea)
+    .filter((t) => (inBounds(t, boundsA) || inBounds(t, boundsB)) && !blocked.has(key(t.c, t.r)));
+  if (!endCandidates.length) return null;
+  const end = pickRandom(endCandidates, rng);
+  const start = randomExternalEdgeCell(qA, rng);
+
+  const seam = pickStitchedSeam(qA, qB, blocked, rng);
+  if (!seam) return null;
+
+  const { connections: connA } = generateMaze(boundsA, blocked, rng);
+  const { connections: connB } = generateMaze(boundsB, blocked, rng);
+  const merged = mergeConnections(connA, connB);
+
+  const aKey = key(seam.tileA.c, seam.tileA.r);
+  const bKey = key(seam.tileB.c, seam.tileB.r);
+  if (!merged.has(aKey)) merged.set(aKey, new Set());
+  if (!merged.has(bKey)) merged.set(bKey, new Set());
+  merged.get(aKey).add(bKey);
+  merged.get(bKey).add(aKey);
+
+  const path = solveMazeBFS(merged, start, end);
+  if (!path) return null;
+  return { path, spawn: start, end, seam };
+}
+
+function pickStitchedSeam(qA, qB, blocked, rng) {
+  const bA = quadrantBounds(qA);
+  const bB = quadrantBounds(qB);
+  const candidates = [];
+
+  if (bA.colMin === bB.colMin && bA.colMax === bB.colMax) {
+    let upperBounds, lowerBounds, upperIsA;
+    if (bA.rowMax + 1 === bB.rowMin) { upperBounds = bA; lowerBounds = bB; upperIsA = true; }
+    else if (bB.rowMax + 1 === bA.rowMin) { upperBounds = bB; lowerBounds = bA; upperIsA = false; }
+    else return null;
+
+    for (let c = upperBounds.colMin; c <= upperBounds.colMax; c++) {
+      const upper = { c, r: upperBounds.rowMax };
+      const lower = { c, r: lowerBounds.rowMin };
+      if (!blocked.has(key(upper.c, upper.r)) && !blocked.has(key(lower.c, lower.r))) {
+        candidates.push({
+          tileA: upperIsA ? upper : lower,
+          tileB: upperIsA ? lower : upper,
+        });
+      }
+    }
+  } else if (bA.rowMin === bB.rowMin && bA.rowMax === bB.rowMax) {
+    let leftBounds, rightBounds, leftIsA;
+    if (bA.colMax + 1 === bB.colMin) { leftBounds = bA; rightBounds = bB; leftIsA = true; }
+    else if (bB.colMax + 1 === bA.colMin) { leftBounds = bB; rightBounds = bA; leftIsA = false; }
+    else return null;
+
+    for (let r = leftBounds.rowMin; r <= leftBounds.rowMax; r++) {
+      const left = { c: leftBounds.colMax, r };
+      const right = { c: rightBounds.colMin, r };
+      if (!blocked.has(key(left.c, left.r)) && !blocked.has(key(right.c, right.r))) {
+        candidates.push({
+          tileA: leftIsA ? left : right,
+          tileB: leftIsA ? right : left,
+        });
+      }
+    }
+  }
+
+  if (!candidates.length) return null;
+  return candidates[Math.floor(rng() * candidates.length)];
+}
+
+function mergeConnections(a, b) {
+  const out = new Map();
+  for (const [k, set] of a) out.set(k, new Set(set));
+  for (const [k, set] of b) {
+    if (!out.has(k)) out.set(k, new Set());
+    for (const n of set) out.get(k).add(n);
+  }
+  return out;
+}
+
+function inBounds(t, b) {
+  return t.c >= b.colMin && t.c <= b.colMax && t.r >= b.rowMin && t.r <= b.rowMax;
 }
 
 function cellCenter(c, r) {

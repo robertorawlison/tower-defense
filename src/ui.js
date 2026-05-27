@@ -1,4 +1,5 @@
 import { CFG } from './config.js';
+import { DIFFICULTY } from './difficulty.js';
 
 export class UI {
   constructor(game) {
@@ -11,19 +12,37 @@ export class UI {
     this.infoEl = document.getElementById('info-box');
     this.startBtn = document.getElementById('start-wave-btn');
     this.newGameBtn = document.getElementById('new-game-btn');
+    this.mazeAlgoBtn = document.getElementById('maze-algo-btn');
     this.overlay = document.getElementById('overlay');
     this.overlayTitle = document.getElementById('overlay-title');
     this.overlayMsg = document.getElementById('overlay-message');
     this.overlayBtn = document.getElementById('overlay-btn');
     this.popup = document.getElementById('tower-popup');
     this.popupContent = this.popup.querySelector('.popup-content');
+    this.difficultyOverlay = document.getElementById('difficulty-overlay');
 
     this.startBtn.addEventListener('click', () => this.game.startWave());
-    this.newGameBtn.addEventListener('click', () => this.game.reset());
+    this.newGameBtn.addEventListener('click', () => this.game.requestNewGame());
     this.overlayBtn.addEventListener('click', () => {
       this.hideOverlay();
-      this.game.reset();
+      this.game.requestNewGame();
     });
+    if (this.mazeAlgoBtn) {
+      this.mazeAlgoBtn.addEventListener('click', () => this.game.regenerateMap());
+    }
+    if (this.difficultyOverlay) {
+      this.difficultyOverlay.querySelectorAll('[data-diff]').forEach((btn) => {
+        btn.addEventListener('click', () => {
+          const diff = btn.dataset.diff;
+          this.hideDifficultyOverlay();
+          if (this._pendingDifficultyChoice) {
+            const cb = this._pendingDifficultyChoice;
+            this._pendingDifficultyChoice = null;
+            cb(diff);
+          }
+        });
+      });
+    }
 
     document.addEventListener('click', (ev) => {
       if (!this.popup.classList.contains('hidden')) {
@@ -47,6 +66,9 @@ export class UI {
       this.startBtn.disabled = true;
     } else {
       this.startBtn.disabled = true;
+    }
+    if (this.mazeAlgoBtn) {
+      this.mazeAlgoBtn.disabled = this.game.state !== 'BUILD_PHASE';
     }
     this.renderShop();
   }
@@ -141,6 +163,19 @@ export class UI {
 
   hideOverlay() {
     this.overlay.classList.add('hidden');
+  }
+
+  showDifficultyOverlay(onChoice) {
+    this._pendingDifficultyChoice = onChoice;
+    if (this.difficultyOverlay) {
+      this.difficultyOverlay.classList.remove('hidden');
+    }
+  }
+
+  hideDifficultyOverlay() {
+    if (this.difficultyOverlay) {
+      this.difficultyOverlay.classList.add('hidden');
+    }
   }
 
   setInfo(text) {

@@ -9,8 +9,10 @@ export const CFG = {
   CASTLE_COLS: 4,
   CASTLE_ROWS: 3,
 
-  SLOT_DENSITY: 0.6,
+  SLOT_DENSITY: 0.4,
   DECOR_DENSITY: 0.18,
+
+  DIFFICULTY_DEFAULT: 'easy',
 
   TOWERS: {
     archer: {

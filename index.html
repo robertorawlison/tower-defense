@@ -20,6 +20,7 @@
       <div id="side-panel">
         <h2>Construções</h2>
         <div id="shop-list"></div>
+        <button id="maze-algo-btn">🧩 Regenerar Labirinto</button>
         <button id="start-wave-btn">▶ Iniciar Onda</button>
         <button id="new-game-btn">↻ Novo Jogo</button>
         <div id="info-box"></div>
@@ -31,6 +32,17 @@
         <h1 id="overlay-title">Game Over</h1>
         <p id="overlay-message"></p>
         <button id="overlay-btn">Jogar de Novo</button>
+      </div>
+    </div>
+
+    <div id="difficulty-overlay" class="hidden">
+      <div id="overlay-content">
+        <h1>Escolha a Dificuldade</h1>
+        <p>Fácil: 2 caminhos atravessam 2 quadrantes cada.<br>Difícil: 4 caminhos, um por quadrante.</p>
+        <div class="difficulty-choices">
+          <button class="diff-btn easy" data-diff="easy">🛡️ Fácil</button>
+          <button class="diff-btn hard" data-diff="hard">⚔️ Difícil</button>
+        </div>
       </div>
     </div>
 

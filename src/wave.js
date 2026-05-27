@@ -1,9 +1,13 @@
 import { CFG } from './config.js';
 import { Enemy } from './enemy.js';
+import { createSpawnSelector, activeSpawnIndices } from './difficulty.js';
 
 export class WaveManager {
-  constructor(waypoints) {
+  constructor(waypoints, difficulty, rng = Math.random) {
     this.waypoints = waypoints;
+    this.difficulty = difficulty;
+    this.rng = rng;
+    this.selector = createSpawnSelector(difficulty, waypoints.length, rng);
     this.waveIndex = 0;
     this.active = false;
     this.spawnTimer = 0;
@@ -12,6 +16,7 @@ export class WaveManager {
     this.types = [];
     this.spawnInterval = 1.0;
     this.hpBoost = 1;
+    this.activeIndices = [];
   }
 
   get current() { return this.waveIndex; }
@@ -29,6 +34,7 @@ export class WaveManager {
     this.spawnTimer = 0.5;
     this.active = true;
     this.waveIndex++;
+    this.activeIndices = activeSpawnIndices(this.selector, this.waveIndex);
     return true;
   }
 
@@ -37,8 +43,9 @@ export class WaveManager {
     if (this.spawned < this.toSpawn) {
       this.spawnTimer -= dt;
       if (this.spawnTimer <= 0) {
-        const type = this.types[Math.floor(Math.random() * this.types.length)];
-        const path = this.waypoints[Math.floor(Math.random() * this.waypoints.length)];
+        const type = this.types[Math.floor(this.rng() * this.types.length)];
+        const pathIdx = this.activeIndices[Math.floor(this.rng() * this.activeIndices.length)];
+        const path = this.waypoints[pathIdx];
         enemies.push(new Enemy(type, path, this.hpBoost));
         this.spawned++;
         this.spawnTimer = this.spawnInterval;

@@ -14,21 +14,28 @@ ctx.imageSmoothingEnabled = false;
 class Game {
   constructor(sprites) {
     this.sprites = sprites;
+    this.difficulty = CFG.DIFFICULTY_DEFAULT;
     this.ui = new UI(this);
     this.reset();
     this.attachInput();
     this.lastTime = performance.now();
     requestAnimationFrame((t) => this.loop(t));
+    this.ui.showDifficultyOverlay((diff) => this.startNewGame(diff));
+  }
+
+  startNewGame(difficulty) {
+    this.difficulty = difficulty;
+    this.reset();
   }
 
   reset() {
-    this.map = generateMap();
+    this.map = generateMap(this.difficulty);
     this.coins = CFG.START_COINS;
     this.castleHP = CFG.CASTLE_HP;
     this.towers = [];
     this.enemies = [];
     this.projectiles = [];
-    this.waveManager = new WaveManager(this.map.waypoints);
+    this.waveManager = new WaveManager(this.map.waypoints, this.difficulty);
     this.state = 'BUILD_PHASE';
     this.hoverCell = null;
     this.selectedTower = null;
@@ -37,6 +44,28 @@ class Game {
     this.ui.hidePopup();
     this.ui.refresh();
     this.ui.setInfo('Coloque sua primeira torre de arqueiro próxima ao caminho dos bárbaros e inicie a onda.');
+  }
+
+  regenerateMap() {
+    if (this.state !== 'BUILD_PHASE') return false;
+    const preservedCoins = this.coins;
+    const preservedWave = this.waveManager.waveIndex;
+    this.map = generateMap(this.difficulty);
+    this.towers = [];
+    this.enemies = [];
+    this.projectiles = [];
+    this.selectedTower = null;
+    this.waveManager = new WaveManager(this.map.waypoints, this.difficulty);
+    this.waveManager.waveIndex = preservedWave;
+    this.coins = preservedCoins;
+    this.ui.hidePopup();
+    this.ui.setInfo('Mapa regenerado. Torres removidas.');
+    this.ui.refresh();
+    return true;
+  }
+
+  requestNewGame() {
+    this.ui.showDifficultyOverlay((diff) => this.startNewGame(diff));
   }
 
   attachInput() {
@@ -174,9 +203,6 @@ class Game {
           } else {
             ctx.fillStyle = CFG.COLORS.path;
             ctx.fillRect(c * CFG.CELL, r * CFG.CELL, CFG.CELL, CFG.CELL);
-            ctx.strokeStyle = CFG.COLORS.pathBorder;
-            ctx.lineWidth = 1;
-            ctx.strokeRect(c * CFG.CELL + 0.5, r * CFG.CELL + 0.5, CFG.CELL - 1, CFG.CELL - 1);
           }
         }
       }
