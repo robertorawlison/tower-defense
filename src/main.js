@@ -15,9 +15,13 @@ class Game {
   constructor(sprites) {
     this.sprites = sprites;
     this.difficulty = CFG.DIFFICULTY_DEFAULT;
+    this.debugPath = false;
     this.ui = new UI(this);
     this.reset();
     this.attachInput();
+    window.addEventListener('keydown', (e) => {
+      if (e.key === 'd' || e.key === 'D') this.debugPath = !this.debugPath;
+    });
     this.lastTime = performance.now();
     requestAnimationFrame((t) => this.loop(t));
     this.ui.showDifficultyOverlay((diff) => this.startNewGame(diff));
@@ -48,7 +52,12 @@ class Game {
 
   regenerateMap() {
     if (this.state !== 'BUILD_PHASE') return false;
-    const preservedCoins = this.coins;
+    let refund = 0;
+    for (const t of this.towers) {
+      for (let lvl = 0; lvl <= t.level; lvl++) {
+        refund += t.def.levels[lvl].cost;
+      }
+    }
     const preservedWave = this.waveManager.waveIndex;
     this.map = generateMap(this.difficulty);
     this.towers = [];
@@ -57,9 +66,13 @@ class Game {
     this.selectedTower = null;
     this.waveManager = new WaveManager(this.map.waypoints, this.difficulty);
     this.waveManager.waveIndex = preservedWave;
-    this.coins = preservedCoins;
+    this.coins += refund;
     this.ui.hidePopup();
-    this.ui.setInfo('Mapa regenerado. Torres removidas.');
+    if (refund > 0) {
+      this.ui.setInfo(`Mapa regenerado. Torres removidas e 💰 ${refund} reembolsados.`);
+    } else {
+      this.ui.setInfo('Mapa regenerado.');
+    }
     this.ui.refresh();
     return true;
   }
@@ -206,6 +219,38 @@ class Game {
           }
         }
       }
+    }
+
+    if (this.debugPath) {
+      ctx.save();
+      for (let r = 0; r < this.map.rows; r++) {
+        for (let c = 0; c < this.map.cols; c++) {
+          const cell = this.map.grid[r][c];
+          if (!cell.pathConn) continue;
+          const cx = c * CFG.CELL + CFG.CELL / 2;
+          const cy = r * CFG.CELL + CFG.CELL / 2;
+          const half = CFG.CELL / 2;
+          ctx.strokeStyle = 'rgba(255, 0, 0, 0.85)';
+          ctx.lineWidth = 4;
+          ctx.lineCap = 'round';
+          ctx.beginPath();
+          if (cell.pathConn.n) { ctx.moveTo(cx, cy); ctx.lineTo(cx, cy - half); }
+          if (cell.pathConn.s) { ctx.moveTo(cx, cy); ctx.lineTo(cx, cy + half); }
+          if (cell.pathConn.e) { ctx.moveTo(cx, cy); ctx.lineTo(cx + half, cy); }
+          if (cell.pathConn.w) { ctx.moveTo(cx, cy); ctx.lineTo(cx - half, cy); }
+          ctx.stroke();
+
+          ctx.font = 'bold 14px sans-serif';
+          ctx.textAlign = 'center';
+          ctx.textBaseline = 'middle';
+          ctx.lineWidth = 4;
+          ctx.strokeStyle = 'rgba(0,0,0,1)';
+          ctx.fillStyle = '#ffff00';
+          ctx.strokeText(cell.pathTile || '?', cx, cy);
+          ctx.fillText(cell.pathTile || '?', cx, cy);
+        }
+      }
+      ctx.restore();
     }
 
     for (let r = 0; r < this.map.rows; r++) {

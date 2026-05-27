@@ -28,7 +28,7 @@ export function generateMap(difficulty = CFG.DIFFICULTY_DEFAULT, rng = Math.rand
   const rows = CFG.GRID_ROWS;
 
   const grid = Array.from({ length: rows }, () =>
-    Array.from({ length: cols }, () => ({ type: CELL_TYPES.GRASS, decor: null, pathTile: null }))
+    Array.from({ length: cols }, () => ({ type: CELL_TYPES.GRASS, decor: null, pathTile: null, pathConn: null }))
   );
 
   const castleStartCol = Math.floor((cols - CFG.CASTLE_COLS) / 2);
@@ -71,7 +71,7 @@ export function generateMap(difficulty = CFG.DIFFICULTY_DEFAULT, rng = Math.rand
     }
   }
 
-  computePathTiles(grid, cols, rows);
+  computePathTiles(grid, paths);
 
   for (let r = 0; r < rows; r++) {
     for (let c = 0; c < cols; c++) {
@@ -220,20 +220,36 @@ function isAdjacentToPath(grid, c, r, cols, rows) {
   return false;
 }
 
-function computePathTiles(grid, cols, rows) {
-  const isPath = (c, r) => {
-    if (c < 0 || r < 0 || c >= cols || r >= rows) return false;
-    return grid[r][c].type === CELL_TYPES.PATH;
+function computePathTiles(grid, paths) {
+  const connections = new Map();
+  const ensure = (k) => {
+    if (!connections.has(k)) connections.set(k, { n: false, s: false, e: false, w: false });
+    return connections.get(k);
   };
-  for (let r = 0; r < rows; r++) {
-    for (let c = 0; c < cols; c++) {
-      if (grid[r][c].type !== CELL_TYPES.PATH) continue;
-      const n = isPath(c, r - 1);
-      const s = isPath(c, r + 1);
-      const e = isPath(c + 1, r);
-      const w = isPath(c - 1, r);
-      grid[r][c].pathTile = pickPathTile(n, s, e, w);
+
+  for (const path of paths) {
+    for (let i = 0; i < path.length; i++) {
+      const cell = path[i];
+      const conn = ensure(key(cell.c, cell.r));
+      const neighbors = [];
+      if (i > 0) neighbors.push(path[i - 1]);
+      if (i < path.length - 1) neighbors.push(path[i + 1]);
+      for (const nb of neighbors) {
+        const dc = nb.c - cell.c;
+        const dr = nb.r - cell.r;
+        if (dc === 0 && dr === -1) conn.n = true;
+        else if (dc === 0 && dr === 1) conn.s = true;
+        else if (dc === 1 && dr === 0) conn.e = true;
+        else if (dc === -1 && dr === 0) conn.w = true;
+      }
     }
+  }
+
+  for (const [k, conn] of connections) {
+    const [c, r] = k.split(',').map(Number);
+    if (grid[r][c].type !== CELL_TYPES.PATH) continue;
+    grid[r][c].pathTile = pickPathTile(conn.n, conn.s, conn.e, conn.w);
+    grid[r][c].pathConn = { n: conn.n, s: conn.s, e: conn.e, w: conn.w };
   }
 }
 
@@ -241,18 +257,18 @@ function pickPathTile(n, s, e, w) {
   const count = (n ? 1 : 0) + (s ? 1 : 0) + (e ? 1 : 0) + (w ? 1 : 0);
   if (count === 4) return 'cross';
   if (count === 3) {
-    if (!n) return 't_down';
-    if (!s) return 't_up';
+    if (!n) return 't_up';
+    if (!s) return 't_down';
     if (!e) return 't_left';
     if (!w) return 't_right';
   }
   if (count === 2) {
     if (n && s) return 'straight_v';
     if (e && w) return 'straight_h';
-    if (n && e) return 'corner_bl';
+    if (n && e) return 'corner_tl';
     if (n && w) return 'corner_br';
-    if (s && e) return 'corner_tl';
-    if (s && w) return 'corner_tr';
+    if (s && e) return 'corner_tr';
+    if (s && w) return 'corner_bl';
   }
   if (e || w) return 'straight_h';
   return 'straight_v';
