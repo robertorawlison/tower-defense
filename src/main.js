@@ -24,7 +24,6 @@ class Game {
   constructor(sprites) {
     this.sprites = sprites;
     this.difficulty = CFG.DIFFICULTY_DEFAULT;
-    this.debugPath = false;
     this.screen = 'TITLE';
     this.screenTimer = SCREEN_TIMEOUTS.TITLE;
     this.botTimer = 0;
@@ -169,10 +168,7 @@ class Game {
         this.ui.refreshMuteBtn();
         return;
       }
-      if (this.screen === 'PLAYING') {
-        if (e.key === 'd' || e.key === 'D') this.debugPath = !this.debugPath;
-        return;
-      }
+      if (this.screen === 'PLAYING') return;
       if (this.screen === 'DIFFICULTY') return;
       this.handleGlobalInteraction();
     });
@@ -252,7 +248,7 @@ class Game {
   }
 
   toggleSpeed() {
-    this.speed = this.speed >= 3 ? 1 : this.speed + 1;
+    this.speed = this.speed >= 4 ? 1 : this.speed + 1;
     this.ui.refreshSpeedBtn();
   }
 
@@ -367,6 +363,8 @@ class Game {
 
   render() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.fillStyle = '#4d6b2e';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
 
     for (let r = 0; r < this.map.rows; r++) {
       for (let c = 0; c < this.map.cols; c++) {
@@ -380,45 +378,13 @@ class Game {
         if (cell.type === CELL_TYPES.PATH) {
           const sprite = this.sprites?.path?.[cell.pathTile] || null;
           if (sprite) {
-            ctx.drawImage(sprite, c * CFG.CELL, r * CFG.CELL, CFG.CELL, CFG.CELL);
+            ctx.drawImage(sprite, c * CFG.CELL, r * CFG.CELL, CFG.CELL + 1, CFG.CELL + 1);
           } else {
             ctx.fillStyle = CFG.COLORS.path;
-            ctx.fillRect(c * CFG.CELL, r * CFG.CELL, CFG.CELL, CFG.CELL);
+            ctx.fillRect(c * CFG.CELL, r * CFG.CELL, CFG.CELL + 1, CFG.CELL + 1);
           }
         }
       }
-    }
-
-    if (this.debugPath) {
-      ctx.save();
-      for (let r = 0; r < this.map.rows; r++) {
-        for (let c = 0; c < this.map.cols; c++) {
-          const cell = this.map.grid[r][c];
-          if (!cell.pathConn) continue;
-          const cx = c * CFG.CELL + CFG.CELL / 2;
-          const cy = r * CFG.CELL + CFG.CELL / 2;
-          const half = CFG.CELL / 2;
-          ctx.strokeStyle = 'rgba(255, 0, 0, 0.85)';
-          ctx.lineWidth = 4;
-          ctx.lineCap = 'round';
-          ctx.beginPath();
-          if (cell.pathConn.n) { ctx.moveTo(cx, cy); ctx.lineTo(cx, cy - half); }
-          if (cell.pathConn.s) { ctx.moveTo(cx, cy); ctx.lineTo(cx, cy + half); }
-          if (cell.pathConn.e) { ctx.moveTo(cx, cy); ctx.lineTo(cx + half, cy); }
-          if (cell.pathConn.w) { ctx.moveTo(cx, cy); ctx.lineTo(cx - half, cy); }
-          ctx.stroke();
-
-          ctx.font = 'bold 14px sans-serif';
-          ctx.textAlign = 'center';
-          ctx.textBaseline = 'middle';
-          ctx.lineWidth = 4;
-          ctx.strokeStyle = 'rgba(0,0,0,1)';
-          ctx.fillStyle = '#ffff00';
-          ctx.strokeText(cell.pathTile || '?', cx, cy);
-          ctx.fillText(cell.pathTile || '?', cx, cy);
-        }
-      }
-      ctx.restore();
     }
 
     for (let r = 0; r < this.map.rows; r++) {

@@ -5,8 +5,8 @@ const NEIGH = [
   { dc: 1, dr: 0 },
 ];
 
-// Chance de despriorizar a direção reta a cada passo: quanto maior, mais curvas (zig-zag).
-const TURN_BIAS = 0.15;
+// Chance de priorizar seguir reto a cada passo: quanto maior, menos curvas (penaliza zig-zag).
+const STRAIGHT_BIAS = 0.85;
 
 const key = (c, r) => `${c},${r}`;
 
@@ -57,9 +57,9 @@ export function generateMaze(bounds, blocked, rng) {
   while (stack.length) {
     const cur = stack[stack.length - 1];
     const dirs = shuffle([...NEIGH], rng);
-    if (cur.lastDir && rng() < TURN_BIAS) {
+    if (cur.lastDir && rng() < STRAIGHT_BIAS) {
       const straightIdx = dirs.findIndex((d) => d.dc === cur.lastDir.dc && d.dr === cur.lastDir.dr);
-      if (straightIdx >= 0) dirs.push(dirs.splice(straightIdx, 1)[0]);
+      if (straightIdx >= 0) dirs.unshift(dirs.splice(straightIdx, 1)[0]);
     }
     let advancedDir = null;
     for (const d of dirs) {

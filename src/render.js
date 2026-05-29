@@ -23,7 +23,15 @@ export function drawGrassCell(ctx, col, row, grassImg) {
   const x = col * CFG.CELL;
   const y = row * CFG.CELL;
   if (grassImg) {
-    ctx.drawImage(grassImg, x, y, CFG.CELL, CFG.CELL);
+    // Recorta a borda da textura (que cria a "grade" ao repetir) e desenha 1px maior
+    // pra sobrepor os tiles e nao deixar fresta no escalonamento.
+    const cw = Math.max(1, Math.round(grassImg.width * 0.06));
+    const ch = Math.max(1, Math.round(grassImg.height * 0.06));
+    ctx.drawImage(
+      grassImg,
+      cw, ch, grassImg.width - cw * 2, grassImg.height - ch * 2,
+      x, y, CFG.CELL + 1, CFG.CELL + 1,
+    );
     return;
   }
   ctx.fillStyle = (col + row) % 2 === 0 ? CFG.COLORS.grass : CFG.COLORS.grassAlt;
