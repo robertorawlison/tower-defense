@@ -4,6 +4,28 @@
   <meta charset="UTF-8" />
   <title>Defesa do Castelo</title>
   <link rel="stylesheet" href="style.css" />
+  <script>
+    // Diagnóstico temporário: mostra qualquer erro de JS na tela.
+    (function () {
+      function show(msg) {
+        var box = document.getElementById('err-box');
+        if (!box) {
+          box = document.createElement('div');
+          box.id = 'err-box';
+          box.style.cssText = 'position:fixed;top:0;left:0;right:0;z-index:99999;background:#c0392b;color:#fff;font:14px monospace;padding:12px;white-space:pre-wrap;max-height:50vh;overflow:auto';
+          (document.body || document.documentElement).appendChild(box);
+        }
+        box.textContent += msg + '\n';
+      }
+      window.addEventListener('error', function (e) {
+        if (e.message) show('ERRO: ' + e.message + (e.filename ? ' @ ' + e.filename + ':' + e.lineno : ''));
+        else if (e.target && e.target.src) show('FALHA AO CARREGAR: ' + e.target.src);
+      }, true);
+      window.addEventListener('unhandledrejection', function (e) {
+        show('PROMISE REJEITADA: ' + (e.reason && e.reason.message ? e.reason.message : e.reason));
+      });
+    })();
+  </script>
 </head>
 <body>
   <div id="game-root">
@@ -12,6 +34,7 @@
       <div class="hud-item"><span class="hud-icon">❤️</span><span id="hud-hp">100</span></div>
       <div class="hud-item"><span class="hud-icon">🌊</span>Onda <span id="hud-wave">0</span> / 10</div>
       <div class="hud-item" id="hud-state">Preparar Defesas</div>
+      <button id="mute-btn" title="Ligar/desligar som (M)">🔊</button>
     </div>
 
     <div id="game-area">
@@ -21,6 +44,7 @@
         <h2>Construções</h2>
         <div id="shop-list"></div>
         <button id="maze-algo-btn">🧩 Regenerar Labirinto</button>
+        <button id="speed-btn">⏩ Velocidade 1x</button>
         <button id="start-wave-btn">▶ Iniciar Onda</button>
         <button id="new-game-btn">↻ Novo Jogo</button>
         <div id="info-box"></div>
@@ -31,7 +55,9 @@
       <div id="overlay-content">
         <h1 id="overlay-title">Game Over</h1>
         <p id="overlay-message"></p>
-        <button id="overlay-btn">Jogar de Novo</button>
+        <div id="overlay-score"></div>
+        <div id="overlay-ranking"></div>
+        <button id="overlay-btn">▶ Voltar ao Início</button>
       </div>
     </div>
 
@@ -48,6 +74,27 @@
 
     <div id="tower-popup" class="hidden">
       <div class="popup-content"></div>
+    </div>
+
+    <div id="title-overlay">
+      <div id="title-content">
+        <h1 class="title-main">🏰 Defesa do Castelo</h1>
+        <p class="title-sub">Defenda o castelo dos bárbaros por 10 ondas!</p>
+        <div class="title-buttons">
+          <button id="title-play-btn">▶ Jogar</button>
+          <button id="title-scores-btn">🏅 Pontuações</button>
+        </div>
+        <p class="title-prompt">Pressione qualquer tecla ou clique para começar</p>
+      </div>
+    </div>
+
+    <div id="highscores-overlay" class="hidden">
+      <div id="highscores-content">
+        <h1>🏅 Melhores Pontuações</h1>
+        <div id="highscores-list"></div>
+        <button id="highscores-back-btn">▶ Voltar ao Início</button>
+        <p class="title-prompt">Clique para voltar</p>
+      </div>
     </div>
   </div>
 

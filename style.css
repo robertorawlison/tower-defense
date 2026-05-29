@@ -168,6 +168,21 @@ button:disabled {
   background: #7c6cf2;
 }
 
+#speed-btn {
+  background: #0f7c8a;
+  font-size: 14px;
+  padding: 8px;
+}
+
+#speed-btn:hover:not(:disabled) {
+  background: #14a0b3;
+}
+
+#speed-btn.active {
+  background: #ffd166;
+  color: #1a1a2e;
+}
+
 #info-box {
   background: #0f3460;
   padding: 8px;
@@ -247,17 +262,114 @@ button:disabled {
   background: #16213e;
   border-radius: 12px;
   border: 3px solid #ffd166;
+  max-height: 92vh;
+  overflow-y: auto;
 }
 
 #overlay-title {
   font-size: 48px;
-  margin-bottom: 20px;
+  margin-bottom: 16px;
   color: #ffd166;
 }
 
 #overlay-message {
   font-size: 20px;
-  margin-bottom: 30px;
+  margin-bottom: 20px;
+}
+
+#overlay-score {
+  margin-bottom: 24px;
+}
+
+.score-grade {
+  display: inline-block;
+  font-size: 22px;
+  font-weight: bold;
+  padding: 6px 18px;
+  border-radius: 999px;
+  margin-bottom: 8px;
+}
+
+.grade-perfect { background: #ffd166; color: #1a1a2e; }
+.grade-gold    { background: #e9b54f; color: #1a1a2e; }
+.grade-silver  { background: #c0c6cc; color: #1a1a2e; }
+.grade-bronze  { background: #cd7f32; color: #1a1a2e; }
+.grade-survive { background: #2c5d8a; color: #fff; }
+.grade-defeat  { background: #c0392b; color: #fff; }
+
+.score-big {
+  font-size: 64px;
+  font-weight: bold;
+  line-height: 1;
+  color: #fff;
+}
+
+.score-pct {
+  font-size: 32px;
+  color: #ffd166;
+  margin-left: 2px;
+}
+
+.score-sub {
+  font-size: 15px;
+  color: #aab;
+  margin-top: 6px;
+}
+
+.score-best {
+  font-size: 18px;
+  font-weight: bold;
+  color: #2ecc71;
+  margin-top: 8px;
+}
+
+#overlay-ranking {
+  margin-bottom: 28px;
+  text-align: left;
+}
+
+.rank-title {
+  font-size: 18px;
+  color: #ffd166;
+  text-align: center;
+  margin-bottom: 10px;
+}
+
+.rank-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 7px 12px;
+  border-radius: 6px;
+  font-size: 15px;
+  background: #0f3460;
+  margin-bottom: 5px;
+}
+
+.rank-row.current {
+  background: #1f5aa0;
+  outline: 2px solid #ffd166;
+}
+
+.rank-pos {
+  width: 32px;
+  color: #ffd166;
+  font-weight: bold;
+}
+
+.rank-grade { width: 24px; text-align: center; }
+
+.rank-score {
+  width: 56px;
+  font-weight: bold;
+  color: #fff;
+}
+
+.rank-meta {
+  flex: 1;
+  text-align: right;
+  color: #aab;
+  font-size: 13px;
 }
 
 #tower-popup {
@@ -303,4 +415,116 @@ button:disabled {
 .popup-btn.upgrade {
   background: #e9b54f;
   color: #222;
+}
+
+#mute-btn {
+  padding: 4px 10px;
+  font-size: 18px;
+  background: #0f3460;
+  border: 1px solid #555;
+  margin-left: 12px;
+}
+
+#mute-btn:hover:not(:disabled) {
+  background: #1a4a80;
+}
+
+#title-overlay, #highscores-overlay {
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(0, 0, 0, 0.82);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 110;
+  border-radius: 6px;
+}
+
+#title-overlay.hidden, #highscores-overlay.hidden {
+  display: none;
+}
+
+#title-content, #highscores-content {
+  text-align: center;
+  padding: 48px 56px;
+  background: #16213e;
+  border-radius: 12px;
+  border: 3px solid #ffd166;
+  max-height: 92vh;
+  overflow-y: auto;
+}
+
+.title-main {
+  font-size: 52px;
+  color: #ffd166;
+  margin-bottom: 12px;
+  text-shadow: 0 3px 0 #00000055;
+}
+
+.title-sub {
+  font-size: 18px;
+  color: #ddd;
+  margin-bottom: 28px;
+}
+
+.title-buttons {
+  display: flex;
+  gap: 16px;
+  justify-content: center;
+  margin-bottom: 24px;
+}
+
+#title-play-btn {
+  background: #2ecc71;
+  font-size: 20px;
+  padding: 14px 34px;
+}
+
+#title-play-btn:hover:not(:disabled) {
+  background: #36d97a;
+}
+
+#title-scores-btn {
+  background: #e9b54f;
+  color: #222;
+  font-size: 20px;
+  padding: 14px 28px;
+}
+
+.title-prompt {
+  font-size: 16px;
+  color: #ffd166;
+  animation: blink 1.2s steps(2, start) infinite;
+}
+
+@keyframes blink {
+  50% { opacity: 0.25; }
+}
+
+#highscores-content h1 {
+  font-size: 36px;
+  color: #ffd166;
+  margin-bottom: 20px;
+}
+
+#highscores-list {
+  min-width: 360px;
+  text-align: left;
+  margin-bottom: 24px;
+}
+
+#highscores-list .rank-empty {
+  text-align: center;
+  color: #aab;
+  font-size: 16px;
+  padding: 20px 0;
+}
+
+#highscores-back-btn {
+  background: #2ecc71;
+  margin-bottom: 12px;
+}
+
+#highscores-back-btn:hover:not(:disabled) {
+  background: #36d97a;
 }

@@ -1,5 +1,6 @@
 import { CFG } from './config.js';
 import { DIFFICULTY } from './difficulty.js';
+import { gradeFor, loadRanking } from './score.js';
 
 export class UI {
   constructor(game) {
@@ -13,22 +14,49 @@ export class UI {
     this.startBtn = document.getElementById('start-wave-btn');
     this.newGameBtn = document.getElementById('new-game-btn');
     this.mazeAlgoBtn = document.getElementById('maze-algo-btn');
+    this.speedBtn = document.getElementById('speed-btn');
     this.overlay = document.getElementById('overlay');
     this.overlayTitle = document.getElementById('overlay-title');
     this.overlayMsg = document.getElementById('overlay-message');
+    this.overlayScore = document.getElementById('overlay-score');
+    this.overlayRanking = document.getElementById('overlay-ranking');
     this.overlayBtn = document.getElementById('overlay-btn');
     this.popup = document.getElementById('tower-popup');
     this.popupContent = this.popup.querySelector('.popup-content');
     this.difficultyOverlay = document.getElementById('difficulty-overlay');
+    this.titleOverlay = document.getElementById('title-overlay');
+    this.highscoresOverlay = document.getElementById('highscores-overlay');
+    this.highscoresList = document.getElementById('highscores-list');
+    this.muteBtn = document.getElementById('mute-btn');
+    this.titlePlayBtn = document.getElementById('title-play-btn');
+    this.titleScoresBtn = document.getElementById('title-scores-btn');
+    this.highscoresBackBtn = document.getElementById('highscores-back-btn');
 
     this.startBtn.addEventListener('click', () => this.game.startWave());
     this.newGameBtn.addEventListener('click', () => this.game.requestNewGame());
-    this.overlayBtn.addEventListener('click', () => {
-      this.hideOverlay();
-      this.game.requestNewGame();
+    this.overlayBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      this.game.goToTitle();
+    });
+    this.titlePlayBtn.addEventListener('click', () => this.game.handleGlobalInteraction());
+    this.titleScoresBtn.addEventListener('click', () => {
+      this.game.primeAudio();
+      this.game.setScreen('HIGHSCORES');
+    });
+    this.highscoresBackBtn.addEventListener('click', () => {
+      this.game.primeAudio();
+      this.game.goToTitle();
+    });
+    this.muteBtn.addEventListener('click', () => {
+      this.game.primeAudio();
+      this.game.audio.toggleMute();
+      this.refreshMuteBtn();
     });
     if (this.mazeAlgoBtn) {
       this.mazeAlgoBtn.addEventListener('click', () => this.game.regenerateMap());
+    }
+    if (this.speedBtn) {
+      this.speedBtn.addEventListener('click', () => this.game.toggleSpeed());
     }
     if (this.difficultyOverlay) {
       this.difficultyOverlay.querySelectorAll('[data-diff]').forEach((btn) => {
@@ -158,7 +186,66 @@ export class UI {
   showOverlay(title, message) {
     this.overlayTitle.textContent = title;
     this.overlayMsg.textContent = message;
+    this.overlayScore.innerHTML = '';
+    this.overlayRanking.innerHTML = '';
     this.overlay.classList.remove('hidden');
+  }
+
+  showResultOverlay(result, record) {
+    const grade = gradeFor(result.score, result.victory);
+    this.overlayTitle.textContent = result.victory ? '🏆 Vitória!' : '💀 Derrota';
+    this.overlayMsg.textContent = result.victory
+      ? 'Você defendeu o castelo de todas as 10 ondas!'
+      : `Os bárbaros tomaram o castelo na onda ${result.wave}.`;
+
+    const standing = record.isBest
+      ? '<div class="score-best">✨ Novo recorde!</div>'
+      : `<div class="score-sub">Posição no ranking: #${record.rank}</div>`;
+    this.overlayScore.innerHTML = `
+      <div class="score-grade ${grade.cls}">${grade.icon} ${grade.label}</div>
+      <div class="score-big">${result.score}<span class="score-pct">%</span></div>
+      <div class="score-sub">Vida do castelo preservada (${result.hp}/${result.maxHP})</div>
+      ${standing}
+    `;
+    this.overlayRanking.innerHTML = this.renderRanking(record.ranking, record.attemptId);
+    this.overlay.classList.remove('hidden');
+  }
+
+  renderRanking(ranking, currentId, title = '🏅 Melhores Tentativas') {
+    if (!ranking || !ranking.length) return '';
+    const rows = ranking.map((a, i) => {
+      const grade = gradeFor(a.score, a.victory);
+      const diffLabel = a.difficulty === 'hard' ? 'Difícil' : 'Fácil';
+      const progress = a.victory ? 'Onda 10 ✓' : `Onda ${a.wave}`;
+      const here = a.id === currentId ? ' current' : '';
+      return `<div class="rank-row${here}">
+        <span class="rank-pos">#${i + 1}</span>
+        <span class="rank-grade">${grade.icon}</span>
+        <span class="rank-score">${a.score}%</span>
+        <span class="rank-meta">${diffLabel} • ${progress}</span>
+      </div>`;
+    });
+    return `${title ? `<h3 class="rank-title">${title}</h3>` : ''}${rows.join('')}`;
+  }
+
+  renderHighscores() {
+    const ranking = loadRanking();
+    if (!ranking.length) {
+      this.highscoresList.innerHTML = '<div class="rank-empty">Nenhuma partida registrada ainda.<br>Jogue para entrar no ranking!</div>';
+      return;
+    }
+    this.highscoresList.innerHTML = this.renderRanking(ranking, null, '');
+  }
+
+  refreshMuteBtn() {
+    if (!this.muteBtn) return;
+    this.muteBtn.textContent = this.game.audio.muted ? '🔇' : '🔊';
+  }
+
+  refreshSpeedBtn() {
+    if (!this.speedBtn) return;
+    this.speedBtn.textContent = `⏩ Velocidade ${this.game.speed}x`;
+    this.speedBtn.classList.toggle('active', this.game.speed > 1);
   }
 
   hideOverlay() {

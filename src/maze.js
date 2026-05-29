@@ -5,7 +5,8 @@ const NEIGH = [
   { dc: 1, dr: 0 },
 ];
 
-const TURN_BIAS = 0.85;
+// Chance de despriorizar a direção reta a cada passo: quanto maior, mais curvas (zig-zag).
+const TURN_BIAS = 0.15;
 
 const key = (c, r) => `${c},${r}`;
 

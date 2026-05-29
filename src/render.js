@@ -73,6 +73,49 @@ export function drawSlot(ctx, col, row, slotImg, pulse) {
   }
 }
 
+export function drawSpawnIndicator(ctx, path, time) {
+  if (!path || !path.length) return;
+  const start = path[0];
+  const next = path[1] || start;
+  const pulse = 0.5 + 0.5 * Math.sin(time * 4);
+  const r = CFG.CELL * (0.32 + 0.06 * pulse);
+
+  ctx.save();
+  ctx.beginPath();
+  ctx.arc(start.x, start.y, r, 0, Math.PI * 2);
+  ctx.fillStyle = `rgba(233, 69, 96, ${0.22 + 0.18 * pulse})`;
+  ctx.fill();
+  ctx.lineWidth = 3;
+  ctx.strokeStyle = `rgba(233, 69, 96, ${0.7 + 0.3 * pulse})`;
+  ctx.stroke();
+
+  const dx = next.x - start.x;
+  const dy = next.y - start.y;
+  const len = Math.hypot(dx, dy) || 1;
+  const ux = dx / len, uy = dy / len;
+  const px = -uy, py = ux;
+  const tip = { x: start.x + ux * (r + 12), y: start.y + uy * (r + 12) };
+  const base = { x: start.x + ux * r, y: start.y + uy * r };
+  ctx.beginPath();
+  ctx.moveTo(tip.x, tip.y);
+  ctx.lineTo(base.x - px * 8, base.y - py * 8);
+  ctx.lineTo(base.x + px * 8, base.y + py * 8);
+  ctx.closePath();
+  ctx.fillStyle = '#fff';
+  ctx.fill();
+
+  ctx.font = 'bold 12px sans-serif';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.lineWidth = 3;
+  ctx.strokeStyle = 'rgba(0,0,0,0.85)';
+  ctx.fillStyle = '#ffd166';
+  const label = '⚔ INIMIGOS';
+  ctx.strokeText(label, start.x, start.y - r - 9);
+  ctx.fillText(label, start.x, start.y - r - 9);
+  ctx.restore();
+}
+
 export function drawCastle(ctx, gridCol, gridRow, castleImg) {
   const x = gridCol * CFG.CELL;
   const y = gridRow * CFG.CELL;
