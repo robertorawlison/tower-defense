@@ -8,7 +8,6 @@
   :root {
     --bg: #1a1a2e; --bg2: #16213e; --panel: #0f3460;
     --gold: #ffd166; --blue: #2c5d8a; --text: #eef1f6; --muted: #aab3c5;
-    --green: #2ecc71; --red: #c0392b;
   }
   * { box-sizing: border-box; margin: 0; padding: 0; }
   html, body { height: 100%; }
@@ -21,7 +20,7 @@
     position: absolute; inset: 0; display: none;
     flex-direction: column; justify-content: center;
     padding: 6vh 9vw;
-    background: radial-gradient(circle at 70% 15%, #233158 0%, var(--bg) 55%, #0d0d1a 100%);
+    background: radial-gradient(circle at 72% 12%, #233158 0%, var(--bg) 55%, #0d0d1a 100%);
   }
   .slide.active { display: flex; animation: fade .35s ease; }
   @keyframes fade { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
@@ -30,28 +29,43 @@
             text-transform: uppercase; font-size: 1.1vw; margin-bottom: 1.4vh; }
   h1 { font-size: 4.6vw; line-height: 1.05; margin-bottom: 2vh; }
   h2 { font-size: 3vw; line-height: 1.1; margin-bottom: 3vh;
-       border-bottom: .4vh solid var(--gold); padding-bottom: 1.4vh; display: inline-block; }
+       border-bottom: .4vh solid var(--gold); padding-bottom: 1.2vh; display: inline-block; }
   ul { list-style: none; }
-  li { font-size: 1.75vw; line-height: 1.5; margin: 1.5vh 0; padding-left: 2.4vw;
+  li { font-size: 1.9vw; line-height: 1.5; margin: 1.7vh 0; padding-left: 2.4vw;
        position: relative; color: #e8ecf5; }
   li::before { content: "⚔"; position: absolute; left: 0; color: var(--gold); font-size: 1.5vw; top: .1vh; }
-  li small { color: var(--muted); font-size: 1.25vw; }
-  .two { display: grid; grid-template-columns: 1fr 1fr; gap: 2vw 4vw; }
+  li small { color: var(--muted); font-size: 1.3vw; }
+  .two { display: grid; grid-template-columns: 1fr 1fr; gap: 1vh 4vw; }
   .pill { display: inline-block; background: var(--panel); color: var(--text);
-          padding: .5vh 1.4vw; border-radius: 999px; font-size: 1.3vw;
-          margin: .6vh .6vw .6vh 0; border: 1px solid #2a4a7a; }
+          padding: .6vh 1.4vw; border-radius: 999px; font-size: 1.35vw;
+          margin: .7vh .6vw .7vh 0; border: 1px solid #2a4a7a; }
   .pill.gold { background: var(--gold); color: #1a1a2e; font-weight: 700; border: none; }
-  .lead { font-size: 1.9vw; color: var(--muted); line-height: 1.5; max-width: 70vw; }
+
+  /* sprites */
+  .sprites { display: flex; gap: 3vw; align-items: flex-end; flex-wrap: wrap; margin-top: 1vh; }
+  .sprite { text-align: center; }
+  .sprite img { image-rendering: pixelated; height: 15vh; display: block;
+                filter: drop-shadow(0 6px 10px rgba(0,0,0,.5)); }
+  .sprite.big img { height: 26vh; }
+  .sprite span { display: block; margin-top: 1vh; color: var(--muted); font-size: 1.2vw; }
+  .sprite b { color: var(--gold); }
+  .row-with-text { display: grid; grid-template-columns: 1.1fr .9fr; gap: 3vw; align-items: center; }
+
+  /* prompts / quotes */
+  .prompt { background: #0d1730; border-left: .5vh solid var(--gold);
+            border-radius: 8px; padding: 1.6vh 1.8vw; margin: 1.3vh 0;
+            font-size: 1.5vw; color: #d7e0f0; font-style: italic; line-height: 1.4; }
+  .prompt b { color: var(--gold); font-style: normal; }
 
   /* title slide */
   .title { text-align: center; align-items: center; justify-content: center; }
-  .title .emoji { font-size: 9vw; margin-bottom: 1vh; }
   .title h1 { font-size: 6vw; color: var(--gold); }
   .title .sub { font-size: 2.4vw; color: var(--text); margin-top: 1vh; }
-  .title .meta { font-size: 1.7vw; color: var(--muted); margin-top: 5vh; }
-  .title .authors { font-size: 2vw; color: var(--text); margin-top: 1.5vh; font-weight: 600; }
+  .title .meta { font-size: 1.6vw; color: var(--muted); margin-top: 4vh; }
+  .title .authors { font-size: 2vw; color: var(--text); margin-top: 1.4vh; font-weight: 600; }
+  .title img { image-rendering: pixelated; height: 26vh; margin-bottom: 1vh;
+               filter: drop-shadow(0 8px 14px rgba(0,0,0,.6)); }
 
-  /* footer / chrome */
   .chrome { position: fixed; bottom: 0; left: 0; right: 0; height: 4.6vh;
             display: flex; align-items: center; justify-content: space-between;
             padding: 0 2vw; font-size: 1.1vw; color: var(--muted);
@@ -74,179 +88,182 @@
 <div class="progress" id="progress"></div>
 <div class="deck" id="deck">
 
-  <!-- 1 -->
+  <!-- 1 — Capa -->
   <section class="slide title active">
-    <div class="emoji">🏰</div>
+    <img src="assets/castle.png" alt="Castelo" />
     <h1>Defesa do Castelo</h1>
-    <div class="sub">Um jogo de Tower Defense Medieval</div>
+    <div class="sub">Tower Defense Medieval — feito com agentes de codificação</div>
     <div class="meta">Atividade 02 — Criando um Jogo · HTML5 Canvas + JavaScript</div>
     <div class="authors">Josué Oliveira &nbsp;·&nbsp; Roberto Rawlison</div>
   </section>
 
-  <!-- 2 -->
+  <!-- 2 — O jogo -->
   <section class="slide">
     <div class="kicker">O Jogo</div>
     <h2>O que é</h2>
-    <ul>
-      <li>Tower defense que roda <strong>100% no navegador</strong> (HTML + JavaScript)</li>
-      <li>Defenda o castelo de <strong>10 ondas</strong> de bárbaros</li>
-      <li>Apenas <strong>torres automáticas</strong> — sem personagem controlável</li>
-      <li>Moedas ao derrotar inimigos → <strong>comprar e melhorar</strong> torres</li>
-      <li>Mapa <strong>gerado proceduralmente</strong>, com múltiplos caminhos</li>
-      <li><small>Escolhemos Tower Defense no lugar do Tetris — cobre os mesmos conceitos do guia</small></li>
-    </ul>
-  </section>
-
-  <!-- 3 -->
-  <section class="slide">
-    <div class="kicker">Decisões de projeto</div>
-    <h2>Stack &amp; regras</h2>
-    <div class="two">
+    <div class="row-with-text">
       <ul>
-        <li>HTML5 Canvas + JS puro <small>(módulos ES6, sem framework)</small></li>
-        <li>Sprites PNG externos <small>(+ fallback de retângulos)</small></li>
-        <li>Castelo com <strong>HP = 100</strong>; vitória na onda 10</li>
+        <li>Tower defense que roda no <strong>navegador</strong></li>
+        <li>Defenda o castelo de <strong>10 ondas</strong> de bárbaros</li>
+        <li>Só <strong>torres automáticas</strong> — sem personagem</li>
+        <li>Moedas → <strong>comprar e melhorar</strong> torres</li>
       </ul>
-      <ul>
-        <li>3 torres: <strong>arqueiro · besta · catapulta</strong> (com upgrade)</li>
-        <li>3 bárbaros: <strong>martelo</strong> (básico), <strong>furioso</strong> (veloz), <strong>machado</strong> (tanque)</li>
-        <li>Grid 36×21 · células de 48px</li>
-      </ul>
+      <div class="sprites">
+        <div class="sprite"><img src="assets/enemies/martelo/down.png" alt="Martelo"><span><b>Martelo</b><br>básico</span></div>
+        <div class="sprite"><img src="assets/enemies/furioso/down.png" alt="Furioso"><span><b>Furioso</b><br>veloz</span></div>
+        <div class="sprite"><img src="assets/enemies/machado/down.png" alt="Machado"><span><b>Machado</b><br>tanque</span></div>
+      </div>
     </div>
   </section>
 
-  <!-- 4 -->
+  <!-- 3 — Imagens de referência -->
   <section class="slide">
-    <div class="kicker">Ferramentas &amp; agentes</div>
+    <div class="kicker">Assets</div>
+    <h2>Imagens de referência</h2>
+    <p style="font-size:1.5vw;color:var(--muted);margin-bottom:1vh">
+      Geradas no <strong style="color:var(--text)">ChatGPT</strong> em pixel art e recortadas por nós para a pasta <code style="color:var(--gold)">assets/</code>.
+    </p>
+    <div class="sprites" style="justify-content:space-between">
+      <div class="sprite"><img src="assets/towers/archer/down.png" alt="Arqueiro"><span><b>Arqueiro</b></span></div>
+      <div class="sprite"><img src="assets/towers/crossbow/down.png" alt="Besta"><span><b>Besta</b></span></div>
+      <div class="sprite"><img src="assets/towers/catapult/down.png" alt="Catapulta"><span><b>Catapulta</b></span></div>
+      <div class="sprite big"><img src="assets/castle.png" alt="Castelo"><span><b>Castelo</b> (base a defender)</span></div>
+    </div>
+  </section>
+
+  <!-- 4 — Prompts iniciais -->
+  <section class="slide">
+    <div class="kicker">Como pedimos</div>
+    <h2>Os prompts iniciais</h2>
+    <div class="prompt">"crie um jogo de <b>tower defense</b> [...] defender o castelo contra bárbaros e coletar moedas derrotando-os"</div>
+    <div class="prompt">"comprar torres de arqueiros, bestas e catapulta — <b>três tiers de armas</b>" · "<b>3 tipos</b> de bárbaros"</div>
+    <div class="prompt">"uma <b>pausa</b> entre ondas para colocar torres" · "mapa <b>gerado aleatoriamente</b> com caminhos" · "torres em <b>pontos fixos</b> ao redor dos caminhos"</div>
+    <div class="prompt">"agora, para o plano, <b>faça perguntas e dê sugestões</b> de como pode ser feito"</div>
+  </section>
+
+  <!-- 5 — Decisões com o agente -->
+  <section class="slide">
+    <div class="kicker">Planejamento</div>
+    <h2>Decisões fechadas com o agente</h2>
+    <p style="font-size:1.5vw;color:var(--muted);margin-bottom:1.5vh">
+      Antes de programar, o agente <strong style="color:var(--text)">fez perguntas</strong>. Nossas respostas viraram o plano do projeto:
+    </p>
+    <div>
+      <span class="pill gold">HTML5 Canvas + JS puro</span>
+      <span class="pill">Sem cavaleiro — só torres</span>
+      <span class="pill">Grid com múltiplos caminhos</span>
+      <span class="pill">Sprites PNG (pixel art)</span>
+      <span class="pill">Castelo com HP</span>
+      <span class="pill">10 ondas, vitória final</span>
+      <span class="pill">Upgrade in-place</span>
+      <span class="pill">Grid 36×21 · 48px</span>
+      <span class="pill">furioso=veloz · martelo=básico · machado=tanque</span>
+    </div>
+  </section>
+
+  <!-- 6 — Ferramentas & agentes -->
+  <section class="slide">
+    <div class="kicker">Ferramentas</div>
     <h2>Como construímos</h2>
     <ul>
-      <li><strong>Claude Code</strong> (CLI) — agente único que lê/escreve arquivos e roda comandos</li>
-      <li>Modelos <strong>Claude</strong>: Sonnet (rápido, maioria das edições) e Opus (planejamento)</li>
-      <li><strong>ChatGPT</strong> — geração das imagens de referência dos sprites (pixel art)</li>
-      <li>Destaque: o agente <strong>fez perguntas antes de codar</strong> e gerou um plano de projeto</li>
+      <li><strong>Claude Code</strong> — agente único que lê/escreve arquivos e roda comandos</li>
+      <li>Modelos <strong>Claude</strong>: Sonnet (rápido) e Opus (planejamento)</li>
+      <li><strong>ChatGPT</strong> — geração das imagens dos sprites</li>
     </ul>
   </section>
 
-  <!-- 5 -->
+  <!-- 7 — Experiência prévia -->
   <section class="slide">
     <div class="kicker">Ponto de partida</div>
     <h2>Experiência prévia</h2>
     <ul>
       <li>HTML / JavaScript: <strong>básica</strong></li>
       <li>Desenvolvimento de jogos: <strong>nenhuma</strong></li>
-      <li>Conceitos novos para nós:</li>
     </ul>
-    <div style="margin-top:1vh">
+    <p style="font-size:1.4vw;color:var(--muted);margin:1.5vh 0 .6vh">Novidades para nós:</p>
+    <div>
       <span class="pill">game loop</span><span class="pill">delta time</span>
       <span class="pill">geração procedural</span><span class="pill">pathfinding (BFS)</span>
       <span class="pill">Web Audio</span><span class="pill">localStorage</span>
     </div>
   </section>
 
-  <!-- 6 -->
+  <!-- 8 — Etapa 1 -->
   <section class="slide">
     <div class="kicker">Etapa 1</div>
     <h2>Base do jogo</h2>
     <ul>
-      <li>Geração de mapa + caminhos + <strong>autotile</strong> dos tiles</li>
-      <li>Torres com upgrade e projéteis <small>(catapulta com tiro parabólico)</small></li>
-      <li>3 inimigos, 10 ondas e a <strong>fase de construção</strong> entre ondas</li>
-      <li>Condições de vitória/derrota pelo <strong>HP do castelo</strong></li>
-      <li>Código <strong>modular</strong> <small>(main, map, maze, tower, enemy, wave, ui, render…)</small></li>
+      <li>Mapa com caminhos + encaixe automático dos tiles</li>
+      <li>Torres com upgrade e projéteis <small>(catapulta em arco)</small></li>
+      <li>3 inimigos, 10 ondas e fase de construção</li>
+      <li>Vitória/derrota pelo <strong>HP do castelo</strong></li>
     </ul>
   </section>
 
-  <!-- 7 -->
+  <!-- 9 — Etapa 2 -->
   <section class="slide">
     <div class="kicker">Etapa 2</div>
-    <h2>Níveis &amp; pontuação</h2>
+    <h2>Dificuldade &amp; pontuação</h2>
     <ul>
-      <li>Dificuldade <strong>Fácil / Difícil</strong> (muda o nº de caminhos) + regenerar labirinto</li>
-      <li>Pontuação pela <strong>vida do castelo preservada</strong> — 100% = partida perfeita</li>
-      <li>Medalhas: <strong>Perfeito · Ouro · Prata · Bronze · Sobreviveu</strong></li>
+      <li>Dificuldade <strong>Fácil / Difícil</strong> + regenerar labirinto</li>
+      <li>Pontuação pela <strong>vida do castelo preservada</strong> (100% = perfeito)</li>
       <li><strong>High scores</strong>: ranking das melhores tentativas</li>
     </ul>
   </section>
 
-  <!-- 8 -->
+  <!-- 10 — Etapa 3 -->
   <section class="slide">
     <div class="kicker">Etapa 3</div>
     <h2>Loop de arcade</h2>
     <ul>
-      <li><strong>Tela de abertura</strong> — aguarda o jogador interagir para começar</li>
-      <li><strong>Game over</strong> → mostra resultado e volta ao início</li>
-      <li><strong>Attract mode</strong> — demonstração jogada sozinha por um "bot"</li>
-      <li>Loop clássico: <strong>abertura → attract → high scores → abertura</strong></li>
+      <li><strong>Tela de abertura</strong> — interagir para começar</li>
+      <li><strong>Game over</strong> → volta ao início</li>
+      <li><strong>Attract mode</strong> (demo) + tela de <strong>high scores</strong> no loop</li>
     </ul>
   </section>
 
-  <!-- 9 -->
+  <!-- 11 — Etapa 4 -->
   <section class="slide">
     <div class="kicker">Etapa 4</div>
     <h2>Outras adições</h2>
     <div class="two">
       <ul>
         <li><strong>Persistência</strong>: ranking no localStorage</li>
-        <li><strong>Sprites PNG direcionais</strong> (4 direções)</li>
+        <li><strong>Sprites direcionais</strong> (4 direções)</li>
       </ul>
       <ul>
-        <li><strong>Áudio</strong>: música + efeitos MP3 <small>(matar, onda, upgrade, dano, vitória/derrota)</small></li>
-        <li><strong>Extras</strong>: velocidade 1x–4x, indicadores de surgimento, servidor sem cache</li>
+        <li><strong>Áudio</strong>: música + efeitos MP3</li>
+        <li><strong>Extras</strong>: velocidade 1x–4x, indicador de surgimento</li>
       </ul>
     </div>
   </section>
 
-  <!-- 10 -->
+  <!-- 12 — Retrabalho -->
   <section class="slide">
     <div class="kicker">Não foi linear</div>
-    <h2>Retrabalho &amp; dificuldades</h2>
+    <h2>Retrabalho</h2>
     <ul>
-      <li><strong>Cache do navegador</strong>: botões "paravam de funcionar" → servidor <em>no-cache</em></li>
-      <li><strong>Diminuir o mapa</strong> quebrou a geração dos caminhos → revertido</li>
-      <li><strong>Calibragem do zig-zag</strong> dos caminhos — feita por tentativa/iteração</li>
-      <li><strong>Frestas entre tiles</strong> (linhas verdes) — ajustes de renderização</li>
-      <li><small>O agente diagnosticou a maioria a partir da descrição do sintoma (e de prints)</small></li>
+      <li><strong>Cache do navegador</strong>: botões "paravam" → servidor sem cache</li>
+      <li><strong>Diminuir o mapa</strong> quebrou os caminhos → revertido</li>
+      <li>Calibragem do zig-zag e frestas entre tiles <small>(ajustes iterativos)</small></li>
     </ul>
   </section>
 
-  <!-- 11 -->
+  <!-- 13 — Conclusões -->
   <section class="slide">
-    <div class="kicker">Conclusões · 1</div>
-    <h2>Aprendizado</h2>
+    <div class="kicker">Conclusões</div>
+    <h2>O que levamos</h2>
     <ul>
-      <li>A falta de experiência <strong>não impediu</strong> — o agente comprimiu a curva de aprendizado</li>
-      <li>Aprendemos: game loop, módulos, localStorage, Web Audio, servir via HTTP</li>
-      <li>Sem agentes? <strong>Não nesse prazo nem nesse acabamento</strong>, dado o ponto de partida</li>
+      <li>A inexperiência <strong>não impediu</strong> — o agente comprimiu a curva</li>
+      <li>Código <strong>legível e modular</strong>, mas refatorável se crescer</li>
+      <li><strong>Déficit de compreensão</strong>: entendemos no geral, não a fundo</li>
+      <li><strong>"Funciona na tela" ≠ "código bom"</strong> — validar exige entender</li>
     </ul>
   </section>
 
-  <!-- 12 -->
-  <section class="slide">
-    <div class="kicker">Conclusões · 2</div>
-    <h2>Código &amp; compreensão</h2>
-    <ul>
-      <li>Código <strong>razoavelmente legível e modular</strong> <small>(configs centralizadas)</small></li>
-      <li>Refatoração seria saudável se crescesse <small>(main.js concentra muito)</small></li>
-      <li><strong>Déficit de compreensão</strong>: entendemos no geral, mas não a fundo as partes algorítmicas <small>(geração de mapa, BFS)</small></li>
-      <li>Mudanças pequenas: conseguiríamos sozinhos · estruturais: difícil sem o agente</li>
-    </ul>
-  </section>
-
-  <!-- 13 -->
-  <section class="slide">
-    <div class="kicker">Conclusões · 3</div>
-    <h2>Como julgamos sucesso</h2>
-    <ul>
-      <li>Julgamos sobretudo pelo <strong>comportamento na tela</strong> — funcional, mas limitado</li>
-      <li><strong>"Funciona" ≠ "código bom"</strong>: validar de verdade exige entender o que foi feito</li>
-      <li>Atenção: estudar fundamentos · déficit de compreensão · validação real</li>
-      <li>Experiência geral: <strong>muito positiva e produtiva</strong></li>
-    </ul>
-  </section>
-
-  <!-- 14 -->
+  <!-- 14 — Demo -->
   <section class="slide title">
-    <div class="emoji">🏰⚔️</div>
+    <img src="assets/towers/archer/down.png" alt="" style="height:20vh" />
     <h1 style="font-size:4.6vw">Demonstração ao vivo</h1>
     <div class="sub">Obrigado!</div>
     <div class="meta">github.com/robertorawlison/tower-defense</div>
@@ -280,6 +297,7 @@
     else if (e.key === 'End') show(total - 1);
   });
   document.addEventListener('click', (e) => {
+    if (e.target.closest('a')) return;
     if (e.clientX < window.innerWidth * 0.25) prev(); else next();
   });
   show(0);
