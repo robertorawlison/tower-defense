@@ -1,0 +1,183 @@
+<!DOCTYPE html><html lang='pt-BR'><head><meta charset='UTF-8'><title>Relatorio</title><style>
+@page { size: A4; margin: 2cm 2.2cm; }
+* { box-sizing: border-box; }
+body {
+  font-family: "Segoe UI", Calibri, Arial, sans-serif;
+  font-size: 11pt; line-height: 1.5; color: #1a1a2e; max-width: 800px;
+  margin: 0 auto; padding: 0;
+}
+h1 { font-size: 22pt; color: #16213e; border-bottom: 3px solid #ffd166;
+     padding-bottom: 6px; margin-top: 0; }
+h2 { font-size: 16pt; color: #0f3460; margin-top: 26px;
+     border-bottom: 1px solid #ccc; padding-bottom: 4px; page-break-after: avoid; }
+h3 { font-size: 13pt; color: #1f5aa0; margin-top: 20px; page-break-after: avoid; }
+p { margin: 8px 0; text-align: justify; }
+ul { margin: 8px 0 8px 0; padding-left: 22px; }
+li { margin: 4px 0; }
+strong { color: #16213e; }
+code { background: #eef1f6; padding: 1px 5px; border-radius: 4px;
+       font-family: Consolas, monospace; font-size: 0.9em; color: #b5374f; }
+blockquote {
+  margin: 10px 0; padding: 8px 16px; background: #f4f7fb;
+  border-left: 4px solid #ffd166; color: #333; font-style: italic;
+}
+hr { border: none; border-top: 1px solid #ddd; margin: 22px 0; }
+</style></head><body><h1>Relatório — Atividade 02: Criando um Jogo</h1>
+<p><strong>Jogo:</strong> Defesa do Castelo (Tower Defense Medieval) <strong>Integrantes:</strong> Josué Oliveira e Roberto Rawlison <strong>Plataforma:</strong> HTML5 Canvas + JavaScript puro (módulos ES6, sem frameworks) <strong>Repositório:</strong> github.com/robertorawlison/tower-defense <strong>Data:</strong> junho de 2026</p>
+<hr>
+<h2>Sobre a escolha do jogo</h2>
+<p>A atividade sugeria o Tetris, mas optamos por desenvolver um jogo de <strong>Tower Defense</strong> (combinado previamente). A ideia central é defender um castelo de ondas de bárbaros usando apenas torres automáticas: o jogador coleta moedas derrotando inimigos e gasta essas moedas comprando e melhorando torres. São 10 ondas; sobreviver à décima é a vitória.</p>
+<p>Apesar de o jogo ser diferente do sugerido, ele cobre os mesmos conceitos pedidos em cada etapa do guia (campo de jogo, controle dos elementos, detecção de colisão, condição de fim de jogo, níveis/dificuldade, pontuação, tela de abertura, attract mode, high scores, persistência, estilos visuais e áudio). A seção 7.2 mapeia cada etapa do guia para o que foi feito no nosso jogo.</p>
+<hr>
+<h2>7.1. Experiência prévia</h2>
+<p><strong>Experiência com a linguagem/plataforma (HTML / JavaScript):</strong> básica. O grupo já tinha tido algum contato com HTML e JavaScript e entendia conceitos fundamentais (variáveis, funções, manipulação básica de página), mas nenhum dos integrantes tinha experiência sólida com a linguagem nem havia desenvolvido projetos web próprios de porte parecido. Conceitos como módulos ES6, <code>requestAnimationFrame</code>, renderização em <code>&lt;canvas&gt;</code>, Web Audio API e <code>localStorage</code> eram, em boa parte, novos para nós.</p>
+<p><strong>Experiência com o domínio do projeto (desenvolvimento de jogos):</strong> nenhuma. Esta foi a primeira vez que o grupo desenvolveu um jogo. Não tínhamos familiaridade prévia com conceitos comuns de game dev, como *game loop*, *delta time* (tempo entre quadros para movimento independente de FPS), máquina de estados de tela, detecção de colisão, geração procedural de mapas (labirintos/caminhos), pathfinding (BFS) ou sprites direcionais.</p>
+<p>Esse ponto de partida — base em web, zero em jogos — é importante para contextualizar o restante do relatório: boa parte do que foi produzido só foi viável por causa do agente de codificação, e parte das nossas conclusões gira em torno de <strong>quanto entendemos</strong> do que foi gerado.</p>
+<hr>
+<h2>7.2. Relato do desenvolvimento</h2>
+<h3>Ferramentas e estrutura de agentes</h3>
+<ul>
+<li><strong>Agente de codificação:</strong> Claude Code (CLI/extensão da Anthropic), operando como um único</li>
+</ul>
+<p>agente com acesso ao sistema de arquivos e ao terminal. Não usamos uma arquitetura de múltiplos agentes — foi um agente principal conduzindo todo o desenvolvimento, capaz de ler/escrever arquivos, rodar comandos (servidor local, git) e verificar o próprio trabalho.</p>
+<ul>
+<li><strong>Modelos utilizados:</strong> modelos Claude da família 4.x — principalmente <strong>Claude Sonnet</strong></li>
+</ul>
+<p>(mais rápido, usado na maior parte das edições) e <strong>Claude Opus</strong> (usado em momentos de planejamento e tarefas mais elaboradas). Trocamos entre eles ao longo do projeto.</p>
+<ul>
+<li><strong>Geração de imagens:</strong> <strong>ChatGPT</strong> foi usado para gerar as imagens de referência dos sprites</li>
+</ul>
+<p>(personagens, torres, caminhos, castelo e decorações em estilo pixel art). Nós então recortamos esses sprites e os colocamos na estrutura de pastas <code>assets/</code> que o jogo espera.</p>
+<ul>
+<li><strong>Ambiente:</strong> Windows, com o jogo servido localmente via Python (<code>python -m http.server</code>,</li>
+</ul>
+<p>depois substituído por um <code>serve.py</code> próprio — ver Etapa 4). Servir via HTTP é necessário porque módulos ES6 não funcionam abrindo o arquivo direto (<code>file://</code>).</p>
+<p>Uma característica marcante do fluxo foi o agente <strong>fazer perguntas antes de codar</strong>. Logo no início, em vez de já sair gerando, ele propôs um plano e levantou decisões de projeto (stack, estrutura do mapa, como o jogador perde, número de ondas, etc.), que respondemos. Isso virou um arquivo de plano em Markdown que serviu de contexto para o restante do trabalho.</p>
+<h3>Etapa 1 — Base do jogo</h3>
+<p>Começamos com um prompt relativamente amplo descrevendo a ideia, e fomos refinando com prompts complementares. Os principais foram:</p>
+<blockquote>&quot;crie um código em javascript [...] um jogo de tower defense no qual vc é um cavalheiro e tem que defender o castelo contra tropas invasoras de bárbaros e seu objetivo é coletar moedas derrotando os bárbaros [...]&quot;</blockquote>
+<blockquote>&quot;com essas moedas vc pode comprar torres de vigia com arqueiros, torres com bestas [...] e depois uma catapulta que custa mais caro, são três tiers de armas&quot;</blockquote>
+<blockquote>&quot;faça com que ao passar das ondas tenham outros tipos de bárbaros, quero que tenham 3 tipos&quot;</blockquote>
+<blockquote>&quot;depois de cada onda o jogador terá uma &#x27;pausa&#x27; para poder colocar as torres [...]&quot;</blockquote>
+<blockquote>&quot;o mapa será gerado aleatoriamente, ele terá &#x27;caminhos&#x27; que os bárbaros vão passar [...] as armas terão pontos fixos para serem colocadas &#x27;ao redor&#x27; dos caminhos&quot;</blockquote>
+<blockquote>&quot;agora para o plano, faça perguntas e dê sugestões de como pode ser feito&quot;</blockquote>
+<p>A partir das nossas respostas às perguntas do agente, fecharam-se as seguintes decisões:</p>
+<ul>
+<li><strong>Stack:</strong> HTML5 Canvas + JS puro (sem framework).</li>
+<li><strong>Sem cavaleiro controlável</strong> — apenas torres automáticas.</li>
+<li><strong>Mapa:</strong> grid com múltiplos caminhos, gerado proceduralmente.</li>
+<li><strong>Visual:</strong> sprites PNG externos, com *fallback* de retângulos coloridos caso algum sprite não</li>
+</ul>
+<p>carregue (o que permitiu testar a mecânica antes de ter os sprites prontos).</p>
+<ul>
+<li><strong>Derrota:</strong> castelo com HP (100). <strong>Vitória:</strong> sobreviver às 10 ondas.</li>
+<li><strong>Upgrade in-place</strong> das torres.</li>
+<li><strong>Grid 36×21 células de 48px</strong> (canvas 1728×1008).</li>
+<li><strong>Mapeamento dos inimigos:</strong> martelo = básico, furioso = veloz, machado = tanque.</li>
+</ul>
+<p>O resultado da etapa foi a base jogável: geração de mapa com caminhos, autotile dos tiles de caminho, castelo com barra de HP, as 3 torres (arqueiro, besta, catapulta) com upgrade, os 3 tipos de bárbaro, projéteis (incluindo o tiro parabólico da catapulta), as 10 ondas, a fase de construção entre ondas e as condições de vitória/derrota. O código foi organizado em módulos (<code>main.js</code>, <code>config.js</code>, <code>map.js</code>, <code>maze.js</code>, <code>tower.js</code>, <code>enemy.js</code>, <code>projectile.js</code>, <code>wave.js</code>, <code>ui.js</code>, <code>render.js</code>, etc.), o que facilitou as alterações posteriores.</p>
+<p><strong>Mapeamento com o guia (Etapa 1 do PDF):</strong> o &quot;campo de jogo&quot; é o mapa em grid; o controle das peças vira o posicionamento/upgrade de torres; &quot;detecção de colisão&quot; aparece no acerto dos projéteis e na chegada dos inimigos ao castelo; a &quot;condição de fim de jogo&quot; é o HP do castelo zerar; e a informação da &quot;próxima peça&quot; corresponde à indicação da próxima onda.</p>
+<h3>Etapa 2 — Níveis (dificuldade) e pontuação</h3>
+<p>No guia, esta etapa é sobre subir de nível e pontuação. No nosso jogo, ela se traduziu em:</p>
+<ul>
+<li><strong>Níveis de dificuldade (Fácil / Difícil):</strong> uma tela de seleção no início, que muda a</li>
+</ul>
+<p>estrutura e o número de caminhos pelos quais os bárbaros chegam (no fácil, 2 caminhos que atravessam 2 quadrantes cada; no difícil, 4 caminhos, um por quadrante). Também foi adicionado um botão para <strong>regenerar o labirinto</strong>.</p>
+<ul>
+<li><strong>Pontuação:</strong> decidimos pontuar com base na <strong>vida do castelo preservada ao final</strong>. Proteger</li>
+</ul>
+<p>o castelo 100% (sem perder nenhum ponto de vida) dá pontuação máxima (100%); abaixo disso, a pontuação cai proporcionalmente, com &quot;medalhas&quot; por faixa (Perfeito, Ouro, Prata, Bronze, Sobreviveu) e Derrota = 0%. A pontuação é exibida na tela de fim de jogo.</p>
+<ul>
+<li><strong>High scores (opcional do guia):</strong> criamos um <strong>ranking das melhores tentativas</strong>, que</li>
+</ul>
+<p>ordena as partidas por vitória, pontuação e onda alcançada, destacando a tentativa atual e sinalizando quando é um novo recorde.</p>
+<p>Prompt representativo desta etapa:</p>
+<blockquote>&quot;crie uma espécie de ranking de qual tentativa foi a de maior sucesso e que tenha uma pontuação no final, como sendo de 100% caso você tenha protegido todo o castelo sem cair nenhuma vida, e outras pontuações com base em quanto de vida o castelo ficou&quot;</blockquote>
+<h3>Etapa 3 — Tela de abertura, game over e loop de arcade</h3>
+<p>Esta etapa seguiu de perto o guia, inclusive os itens opcionais:</p>
+<ul>
+<li><strong>Tela de abertura:</strong> o jogo abre numa tela de título e aguarda o jogador interagir (qualquer</li>
+</ul>
+<p>tecla ou clique) para começar.</p>
+<ul>
+<li><strong>Game over / volta ao início:</strong> ao fim da partida (vitória ou derrota), é exibido o resultado</li>
+</ul>
+<p>com a pontuação e, em seguida, o jogo retorna à tela de abertura.</p>
+<ul>
+<li><strong>Attract mode (opcional):</strong> depois de um tempo parado na tela de abertura, o jogo entra em</li>
+</ul>
+<p>modo demonstração, em que um &quot;bot&quot; joga sozinho (constrói torres, dá upgrade e inicia ondas). A demonstração termina assim que o jogador interage.</p>
+<ul>
+<li><strong>Tela de high scores no loop (opcional):</strong> implementamos o loop clássico de arcade — tela de</li>
+</ul>
+<p>abertura → (após um tempo) attract mode → (após mais um tempo) tela de high scores → volta para a abertura, repetindo.</p>
+<p>Prompt representativo (resumido) desta etapa:</p>
+<blockquote>&quot;o jogo deve começar com uma tela de abertura e esperar o usuário interagir para começar. Ao fim de uma jogada (game over) [...] o jogo deve retornar para a tela de abertura. [...] attract mode mostrando uma demonstração [...] combinado com a tela de high scores no loop tradicional dos jogos de arcade [...]&quot;</blockquote>
+<h3>Etapa 4 — Outras adições</h3>
+<p>Implementamos várias das sugestões da quarta etapa do guia, além de extras próprios:</p>
+<ul>
+<li><strong>Persistência das pontuações (6.1):</strong> o ranking é gravado no <strong><code>localStorage</code></strong> do navegador,</li>
+</ul>
+<p>de modo que as melhores pontuações continuam disponíveis ao reabrir o jogo.</p>
+<ul>
+<li><strong>Suporte a estilos visuais (6.2):</strong> o jogo usa <strong>sprites PNG</strong> para grama, caminhos,</li>
+</ul>
+<p>decorações, castelo, torres e inimigos (com renderização direcional — 4 direções — para torres e bárbaros), mantendo o *fallback* de formas coloridas. Os sprites foram gerados com ChatGPT e recortados por nós.</p>
+<ul>
+<li><strong>Efeitos sonoros e música (6.4):</strong> adicionamos <strong>música de fundo</strong> (uma melodia medieval</li>
+</ul>
+<p>simples sintetizada via Web Audio API) e vários <strong>efeitos sonoros em MP3</strong>, disparados em eventos específicos: matar um bárbaro, início de onda (&quot;os bárbaros atacam&quot;), início de partida no modo fácil/difícil, conclusão de onda, construção/upgrade de torre, dano ao castelo e os jingles de vitória e derrota. Há um botão de mudo (e atalho <strong>M</strong>), e o áudio respeita a regra dos navegadores de só iniciar após a primeira interação do usuário.</p>
+<ul>
+<li><strong>Efeitos visuais (6.5):</strong> indicadores pulsantes que mostram, na fase de preparação, **de onde</li>
+</ul>
+<p>os bárbaros vão surgir** (círculo + seta + rótulo), e barra de HP destacada sobre o castelo.</p>
+<ul>
+<li><strong>Outras adições (6.6):</strong></li>
+<ul>
+<li><strong>Modo de velocidade</strong> (1x / 2x / 3x / 4x) para quem quer jogar mais rápido.</li>
+<li>Ajuste fino da <strong>geração dos caminhos</strong> para penalizar curvas em excesso (deixar os</li>
+</ul>
+</ul>
+<p>caminhos menos &quot;zig-zag&quot; e mais retos).</p>
+<ul>
+<ul>
+<li><strong>Servidor local sem cache</strong> (<code>serve.py</code>): durante o desenvolvimento, tivemos problemas</li>
+</ul>
+</ul>
+<p>recorrentes de cache do navegador (arquivos novos e antigos se misturavam e quebravam o jogo). Criamos um pequeno servidor Python que envia cabeçalhos <code>no-cache</code>, resolvendo o problema de vez.</p>
+<h3>Retrabalho e dificuldades ao longo do processo</h3>
+<p>Como pede o guia, vale registrar que <strong>algumas etapas exigiram retrabalho</strong> e vários prompts auxiliares de correção. Os casos mais relevantes:</p>
+<ul>
+<li><strong>Cache do navegador:</strong> o sintoma mais confuso do projeto. Depois de algumas mudanças, os</li>
+</ul>
+<p>botões &quot;paravam de funcionar&quot;. A causa não era o código, e sim o navegador servindo uma mistura de arquivos novos e em cache (um erro do tipo *&quot;módulo não exporta tal função&quot;*). Resolver isso exigiu diagnosticar com um detector de erros na tela e, por fim, trocar o servidor por um sem cache.</p>
+<ul>
+<li><strong>Tamanho do mapa:</strong> pedimos para diminuir o mapa, mas isso fez alguns caminhos serem</li>
+</ul>
+<p>gerados &quot;para fora&quot; da área visível. Tivemos que reverter essa mudança.</p>
+<ul>
+<li><strong>Calibragem dos caminhos:</strong> o ajuste do &quot;zig-zag&quot; foi iterativo — pedimos para reduzir as</li>
+</ul>
+<p>curvas várias vezes em sequência até chegar no resultado desejado.</p>
+<ul>
+<li><strong>Frestas entre os tiles:</strong> apareceram linhas verdes claras entre os quadrados do mapa</li>
+</ul>
+<p>(artefato de renderização), que exigiram alguns ajustes de desenho dos tiles.</p>
+<p>Em geral, foram correções pontuais e o agente conseguiu diagnosticar e resolver a maioria a partir da descrição do sintoma (e, quando preciso, de um print de tela).</p>
+<hr>
+<h2>7.3. Conclusões e comentários</h2>
+<h3>Sobre a falta de experiência e seu impacto</h3>
+<p>A falta de experiência com desenvolvimento de jogos <strong>não impediu</strong> o projeto de avançar — pelo contrário, o agente foi capaz de produzir uma base funcional e ir incrementando recurso sobre recurso. O conhecimento básico de web ajudou a acompanhar a estrutura geral (HTML, arquivos, ideia de funções), mas conceitos específicos de jogos (game loop, delta time, geração procedural, máquina de estados de telas) chegaram prontos pelo agente, sem precisarmos estudá-los a fundo de antemão.</p>
+<p>Por outro lado, <strong>a falta de experiência apareceu na hora de avaliar e direcionar</strong>. Em vários momentos só conseguíamos perceber que algo estava errado pelo resultado visual (&quot;o caminho está bugado&quot;, &quot;as linhas verdes&quot;, &quot;o botão não funciona&quot;) e dependíamos do agente para entender a causa. Se fôssemos <strong>continuar</strong> o projeto de forma séria, sim, seria necessário estudar mais — tanto a linguagem/plataforma quanto fundamentos de desenvolvimento de jogos — para conseguir tomar decisões técnicas com mais autonomia e revisar o que é gerado.</p>
+<h3>O que aprendemos e se faríamos sem agentes</h3>
+<p>Aprendemos bastante sobre <strong>como um jogo é estruturado</strong> na prática: a ideia do game loop rodando a cada quadro, a separação em módulos (mapa, inimigos, torres, UI, render, áudio), o uso de <code>localStorage</code> para persistência, a Web Audio API para som, e o porquê de um jogo em módulos ES6 precisar ser servido por HTTP. Também aprendemos, na marra, sobre cache de navegador.</p>
+<p>Conseguiríamos fazer um projeto parecido <strong>sem</strong> agentes? Honestamente, não nesse prazo nem nesse nível de acabamento, dado o nosso ponto de partida (zero em game dev). Seria possível com bastante estudo e tempo, mas o agente comprimiu enormemente a curva de aprendizado e o esforço de implementação.</p>
+<h3>Sobre a legibilidade e manutenção do código</h3>
+<p>Olhando o código final, a impressão é de que o resultado é <strong>razoavelmente legível e organizado</strong>: os arquivos têm responsabilidades separadas, os nomes são em geral claros e as configurações ajustáveis (custos, HP, velocidades, ondas) ficam centralizadas em <code>config.js</code>, o que facilita mexer no balanceamento. Isso é positivo para manutenção.</p>
+<p>Ainda assim, achamos que <strong>alguma refatoração seria saudável</strong> se o projeto crescesse — por exemplo, o <code>main.js</code> concentra bastante responsabilidade (loop, estados de tela, renderização, áudio), e poderia ser dividido. Para o escopo de uma atividade, no entanto, o nível de organização nos pareceu adequado.</p>
+<h3>Sobre o déficit de compreensão (*comprehension debt*)</h3>
+<p>Este é o ponto mais honesto a registrar. <strong>Entendemos o projeto em nível geral</strong> — sabemos o que cada arquivo faz, conseguimos localizar onde mexer para mudar um valor, um som ou um texto, e acompanhamos a lógica de alto nível. Mas <strong>não entendemos em profundidade</strong> todas as partes, especialmente as mais &quot;algorítmicas&quot;, como a geração procedural do labirinto (DFS/backtracking, o viés de direção que controla as curvas) e o BFS que resolve os caminhos.</p>
+<p>Se fosse necessário fazer <strong>modificações pequenas</strong> (trocar sons, valores, textos, cores, ajustar balanceamento, adicionar um botão), provavelmente conseguiríamos mexer sozinhos, com algum esforço. Já modificações <strong>estruturais</strong> (mudar o algoritmo de geração de mapa, reescrever o sistema de pathfinding, alterar a arquitetura de telas) seriam difíceis sem o apoio do agente.</p>
+<p>Sobre <strong>como julgamos se uma modificação pedida deu certo</strong>: na prática, julgamos principalmente <strong>pelo comportamento observável</strong> — rodando o jogo e vendo se faz o esperado (o som toca, a tela aparece, o caminho fica mais reto, o botão responde). Esse é um critério funcional, mas limitado: ele não garante que o código por trás esteja correto, eficiente ou bem escrito — só que &quot;parece funcionar&quot;. Reconhecer essa limitação é, em si, um dos aprendizados da atividade: a facilidade de gerar muito código rapidamente vem acompanhada do risco de acumular partes que funcionam, mas que não compreendemos totalmente.</p>
+<h3>Comentários finais</h3>
+<p>No geral, a experiência de desenvolver com um agente de codificação foi <strong>muito positiva e produtiva</strong>. O fluxo de &quot;conversar, pedir, ver rodar e ajustar&quot; é rápido e motivador, e o agente foi bom tanto em construir quanto em diagnosticar problemas a partir de descrições informais (e até de prints). Os pontos de atenção que levamos da atividade são: (1) a importância de ainda estudar os fundamentos para não ficar totalmente dependente; (2) o cuidado com o déficit de compreensão; e (3) o fato de que &quot;funciona na tela&quot; não é o mesmo que &quot;o código está bom&quot; — validar de verdade exige entender o que foi feito.</p></body></html>
